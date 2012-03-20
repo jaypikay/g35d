@@ -42,6 +42,7 @@ void signal_handler(int sig)
         case SIGHUP:
             syslog(LOG_INFO, "%s daemon reload configuration", DAEMON_NAME);
             break;
+        case SIGABRT:
         case SIGTERM:
         case SIGINT:
             exit_g35d(EXIT_SUCCESS);
@@ -91,8 +92,11 @@ static void *keypress_event_thread()
 
     for (;;) {
         if ((ret = g35_keypressed(keys, 40)) > 0) {
-            if (keys[0] > 0)
-                g35_uinput_write(keys);
+            if (keys[0] > 0) {
+                ret = g35_uinput_write(keys);
+
+                fprintf(stderr, "g35_uinput_write = %d\n", ret);
+            }
         }
         usleep(40);
     }
