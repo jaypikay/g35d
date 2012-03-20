@@ -17,6 +17,7 @@
 
 static int doDaemon = 0;
 static char *pid_file = "/var/run/g35d.pid";
+static char *uinput_dev = "/dev/uinput";
 
 pthread_t keypress_thread;
 
@@ -102,15 +103,19 @@ int main(int argc, char **argv)
     int ret;
 
     struct option longopts[] = {
-        {"daemon", 0, 0, 'd'},
+        {"daemon", no_argument      , 0, 'd'},
+        {"uinput", required_argument, 0, 'u'},
         {0}
     };
     int longidx, opt;
 
-    while ((opt = getopt_long(argc, argv, "d", longopts, &longidx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "du:", longopts, &longidx)) != -1) {
         switch (opt) {
             case 'd':
                 doDaemon = 1;
+                break;
+            case 'u':
+                uinput_dev = optarg;
                 break;
             default:
                 fprintf(stderr, "opt: %d\n", opt);
@@ -141,7 +146,11 @@ int main(int argc, char **argv)
     }
     syslog(LOG_INFO, "%s daemon has initilised libg35", DAEMON_NAME);
 
-    ret = g35_uinput_init("/dev/uinput");
+    ret = g35_uinput_init(uinput_dev);
+    if (ret < 0) {
+        syslog(LOG_ERR, "failed to open uinput device `%s'", uinput_dev);
+        exit_g35d(EXIT_FAILURE);
+    }
 
     if (pthread_create(&keypress_thread, 0, keypress_event_thread, 0) != 0) {
         perror("pthread_create");
