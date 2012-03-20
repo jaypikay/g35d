@@ -10,7 +10,8 @@
 #include <sys/stat.h>
 #include <pthread.h>
 
-#include "g35.h"
+#include "libg35.h"
+#include "g35d.h"
 
 #define DAEMON_NAME "G35"
 
