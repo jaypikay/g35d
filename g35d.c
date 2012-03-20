@@ -24,7 +24,8 @@ pthread_t keypress_thread;
 
 static void exit_g35d(int exit_code)
 {
-    pthread_join(keypress_thread, NULL);
+    if (keypress_thread)
+        pthread_join(keypress_thread, NULL);
 
     g35_uinput_destroy();
     g35_destroy();
