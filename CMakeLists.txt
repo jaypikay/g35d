@@ -5,4 +5,4 @@ include_directories(include)
 link_directories(../libs)
 
 add_executable(g35d g35d.c)
-target_link_libraries(g35d g35)
+target_link_libraries(g35d g35 pthread)

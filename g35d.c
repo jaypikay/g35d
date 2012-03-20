@@ -17,6 +17,21 @@
 static int doDaemon = 0;
 static char *pid_file = "/var/run/g35d.pid";
 
+pthread_t keypress_thread;
+
+
+static void exit_g35d(int exit_code)
+{
+    pthread_join(keypress_thread, NULL);
+
+    g35_uinput_destroy();
+    g35_destroy();
+
+    syslog(LOG_INFO, "%s daemon shuttdown", DAEMON_NAME);
+
+    closelog();
+    exit(exit_code);
+}
 
 void signal_handler(int sig)
 {
@@ -26,9 +41,7 @@ void signal_handler(int sig)
             break;
         case SIGTERM:
         case SIGINT:
-            g35_destroy();
-            syslog(LOG_INFO, "%s daemon shuttdown", DAEMON_NAME);
-            exit(EXIT_SUCCESS);
+            exit_g35d(EXIT_SUCCESS);
             break;
         default:
             fprintf(stderr, "Unhandled signal (%d) %s\n", sig, strsignal(sig));
@@ -68,12 +81,24 @@ static pid_t daemonize()
     return sid;
 }
 
+static void *keypress_event_thread()
+{
+    unsigned int keys[G35_KEYS_READ_LENGTH] = {0};
+    int ret = 0;
+
+    for (;;) {
+        if ((ret = g35_keypressed(keys, 40)) > 0) {
+            if (keys[0] > 0)
+                g35_uinput_write(keys);
+        }
+        usleep(40);
+    }
+}
+
 int main(int argc, char **argv)
 {
     pid_t pid;
-    unsigned int keys[G35_KEYS_READ_LENGTH] = {0};
-    int ret = 0;
-    int i;
+    int ret;
 
     struct option longopts[] = {
         {"daemon", 0, 0, 'd'},
@@ -115,19 +140,17 @@ int main(int argc, char **argv)
     }
     syslog(LOG_INFO, "%s daemon has initilised libg35", DAEMON_NAME);
 
-    for (;;) {
-        sleep(1);
+    ret = g35_uinput_init("/dev/uinput");
+
+    if (pthread_create(&keypress_thread, 0, keypress_event_thread, 0) != 0) {
+        perror("pthread_create");
+        syslog(LOG_ERR, "%s daemon pthread_create failed", DAEMON_NAME);
+        exit_g35d(EXIT_FAILURE);
     }
 
-    //if ((ret = g35_keypressed(keys)) > 0) {
-    //    fprintf(stderr, "g35_keypressed = %d\n", ret);
-    //    for (i = 0; i < ret; i++) {
-    //        fprintf(stderr, "key[%d] = %d\n", i, keys[i]);
-    //    }
-    //}
+    for (;;)
+        pause();
 
-    g35_destroy();
-    syslog(LOG_INFO, "%s daemon shuttdown", DAEMON_NAME);
-
+    exit_g35d(EXIT_SUCCESS);
     return 0;
 }
