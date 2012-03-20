@@ -30,7 +30,7 @@ static void exit_g35d(int exit_code)
     g35_uinput_destroy();
     g35_destroy();
 
-    syslog(LOG_INFO, "%s daemon shuttdown", DAEMON_NAME);
+    syslog(LOG_INFO, "daemon shuttdown");
 
     closelog();
     exit(exit_code);
@@ -127,7 +127,7 @@ int main(int argc, char **argv)
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(DAEMON_NAME, LOG_CONS, LOG_USER);
 
-    syslog(LOG_INFO, "%s daemon is starting", DAEMON_NAME);
+    syslog(LOG_INFO, "daemon is starting");
 
     signal(SIGHUP, signal_handler);
     signal(SIGTERM, signal_handler);
@@ -136,16 +136,14 @@ int main(int argc, char **argv)
     pid = getpid();
     if (doDaemon) {
         pid = daemonize();
-        syslog(LOG_INFO, "%s daemon is running in background (PID = %d)",
-                DAEMON_NAME, pid);
+        syslog(LOG_INFO, "daemon pid is %d", pid);
     }
 
     if (g35_init()) {
-        syslog(LOG_ERR, "%s daemon failed to claim G35 HID interface",
-                DAEMON_NAME);
+        syslog(LOG_ERR, "daemon failed to claim G35 HID interface");
         exit(EXIT_FAILURE);
     }
-    syslog(LOG_INFO, "%s daemon has initilised libg35", DAEMON_NAME);
+    syslog(LOG_INFO, "successfully initilised libg35");
 
     ret = g35_uinput_init(uinput_dev);
     if (ret < 0) {
@@ -155,7 +153,7 @@ int main(int argc, char **argv)
 
     if (pthread_create(&keypress_thread, 0, keypress_event_thread, 0) != 0) {
         perror("pthread_create");
-        syslog(LOG_ERR, "%s daemon pthread_create failed", DAEMON_NAME);
+        syslog(LOG_ERR, "pthread_create failed");
         exit_g35d(EXIT_FAILURE);
     }
 
