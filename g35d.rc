@@ -1,0 +1,19 @@
+daemon = "false"
+pidfile = "/tmp/g35d.pid"
+
+keymap Profile1 {
+    G1 = 59
+    G2 = 60
+    G3 = 61
+    VOL_DN = 114
+    VOL_UP = 115
+}
+
+keymap Profile2 {
+    G1 = 62
+    G2 = 63
+    G3 = 64
+    VOL_DN = 114
+    VOL_UP = 115
+}
+

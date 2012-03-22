@@ -28,11 +28,15 @@
 #include <syslog.h>
 #include <sys/stat.h>
 #include <pthread.h>
+#include <confuse.h>
 
 #include "libg35.h"
 #include "g35d.h"
+#include "g35config.h"
 
 #define DAEMON_NAME "G35"
+
+static char *config_filename = "../g35d.rc";
 
 static int doDaemon = 0;
 static char *pid_file = "/var/run/g35d.pid";
@@ -55,11 +59,23 @@ static void exit_g35d(int exit_code)
     exit(exit_code);
 }
 
+void conf_test()
+{
+    int i;
+
+    if (g35d_cfg) {
+        fprintf(stderr, "daemon: %s\n",
+                cfg_getbool(g35d_cfg, "daemon") ? "yes" : "no");
+        fprintf(stderr, "pid file: %s\n", cfg_getstr(g35d_cfg, "pidfile"));
+    }
+}
+
 void signal_handler(int sig)
 {
     switch (sig) {
         case SIGHUP:
             syslog(LOG_INFO, "%s daemon reload configuration", DAEMON_NAME);
+            conf_test();
             break;
         case SIGABRT:
         case SIGTERM:
@@ -126,14 +142,19 @@ int main(int argc, char **argv)
     int ret;
 
     struct option longopts[] = {
+        {"config", required_argument, 0, 'c'},
         {"daemon", no_argument      , 0, 'd'},
         {"uinput", required_argument, 0, 'u'},
         {0}
     };
     int longidx, opt;
 
-    while ((opt = getopt_long(argc, argv, "du:", longopts, &longidx)) != -1) {
+    while ((opt = getopt_long(argc, argv, "c:du:", longopts,
+                    &longidx)) != -1) {
         switch (opt) {
+            case 'c':
+                config_filename = optarg;
+                break;
             case 'd':
                 doDaemon = 1;
                 break;
@@ -145,6 +166,8 @@ int main(int argc, char **argv)
                 break;
         }
     }
+
+    read_config(config_filename);
 
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(DAEMON_NAME, LOG_CONS, LOG_USER);
