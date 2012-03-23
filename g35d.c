@@ -125,7 +125,7 @@ static void *keypress_event_thread()
     for (;;) {
         if ((ret = g35_keypressed(keys, 40)) > 0) {
             if (keys[0] > 0) {
-                ret = g35_uinput_write(keys);
+                g35_uinput_write(keys);
             }
         }
         usleep(40);
@@ -169,7 +169,8 @@ int main(int argc, char **argv)
         }
     }
 
-    ret = read_config(config_filename);
+    // TODO evaluate the result of read_config
+    read_config(config_filename);
     if (!pid_file)
         pid_file = cfg_getstr(g35d_cfg, "pidfile");
     if (!seenDaemonFlag)
@@ -189,10 +190,9 @@ int main(int argc, char **argv)
     signal(SIGINT, signal_handler);
 
     pid = getpid();
-    if (doDaemon) {
+    if (doDaemon)
         pid = daemonize();
-        syslog(LOG_INFO, "daemon pid is %d", pid);
-    }
+    syslog(LOG_INFO, "pid is %d", pid);
 
     if (g35_init()) {
         syslog(LOG_ERR, "daemon failed to claim G35 HID interface");
