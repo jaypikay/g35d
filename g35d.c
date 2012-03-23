@@ -36,11 +36,13 @@
 
 #define DAEMON_NAME "G35"
 
-static char *config_filename = "../g35d.rc";
+static char *config_filename = "/etc/g35d.rc";
 
+static int seenDaemonFlag = 0;
 static int doDaemon = 0;
-static char *pid_file = "/var/run/g35d.pid";
-static char *uinput_dev = "/dev/uinput";
+static char *pid_file = NULL;
+static char *uinput_dev = NULL;
+static char *profile_name = NULL;
 
 pthread_t keypress_thread;
 
@@ -52,6 +54,7 @@ static void exit_g35d(int exit_code)
 
     g35_uinput_destroy();
     g35_destroy();
+    close_config();
 
     syslog(LOG_INFO, "daemon shuttdown");
 
@@ -63,8 +66,13 @@ void signal_handler(int sig)
 {
     switch (sig) {
         case SIGHUP:
-            syslog(LOG_INFO, "%s daemon reload configuration", DAEMON_NAME);
             read_config(config_filename);
+            profile_name = cfg_getstr(g35d_cfg, "profile");
+            read_keymap_profile(keymap, profile_name);
+            g35_uinput_update_keymap(keymap);
+
+            syslog(LOG_INFO, "profiles reloaded");
+            signal(SIGHUP, signal_handler);
             break;
         case SIGABRT:
         case SIGTERM:
@@ -131,14 +139,15 @@ int main(int argc, char **argv)
     int ret;
 
     struct option longopts[] = {
-        {"config", required_argument, 0, 'c'},
-        {"daemon", no_argument      , 0, 'd'},
-        {"uinput", required_argument, 0, 'u'},
+        {"config", required_argument,   0, 'c'},
+        {"daemon", no_argument      ,   0, 'd'},
+        {"profile", required_argument,  0, 'p'},
+        {"uinput", required_argument,   0, 'u'},
         {0}
     };
     int longidx, opt;
 
-    while ((opt = getopt_long(argc, argv, "c:du:", longopts,
+    while ((opt = getopt_long(argc, argv, "c:dp:u:", longopts,
                     &longidx)) != -1) {
         switch (opt) {
             case 'c':
@@ -146,6 +155,10 @@ int main(int argc, char **argv)
                 break;
             case 'd':
                 doDaemon = 1;
+                seenDaemonFlag = 1;
+                break;
+            case 'p':
+                profile_name = optarg;
                 break;
             case 'u':
                 uinput_dev = optarg;
@@ -156,7 +169,15 @@ int main(int argc, char **argv)
         }
     }
 
-    read_config(config_filename);
+    ret = read_config(config_filename);
+    if (!pid_file)
+        pid_file = cfg_getstr(g35d_cfg, "pidfile");
+    if (!seenDaemonFlag)
+        doDaemon = cfg_getbool(g35d_cfg, "daemon") ? 1 : 0;
+    if (!uinput_dev)
+        uinput_dev = cfg_getstr(g35d_cfg, "uinput");
+    if (!profile_name)
+        profile_name = cfg_getstr(g35d_cfg, "profile");
 
     setlogmask(LOG_UPTO(LOG_INFO));
     openlog(DAEMON_NAME, LOG_CONS, LOG_USER);
@@ -172,7 +193,6 @@ int main(int argc, char **argv)
         pid = daemonize();
         syslog(LOG_INFO, "daemon pid is %d", pid);
     }
-    fprintf(stderr, "g35d pid %d\n", pid);
 
     if (g35_init()) {
         syslog(LOG_ERR, "daemon failed to claim G35 HID interface");
@@ -180,14 +200,15 @@ int main(int argc, char **argv)
     }
     syslog(LOG_INFO, "successfully initilised libg35");
 
-    ret = g35_uinput_init(uinput_dev);
-    if (ret < 0) {
+    read_keymap_profile(keymap, profile_name);
+    ret = g35_uinput_init(uinput_dev, keymap);
+
+    if (ret) {
         syslog(LOG_ERR, "failed to open uinput device `%s'", uinput_dev);
         exit_g35d(EXIT_FAILURE);
     }
 
     if (pthread_create(&keypress_thread, 0, keypress_event_thread, 0) != 0) {
-        perror("pthread_create");
         syslog(LOG_ERR, "pthread_create failed");
         exit_g35d(EXIT_FAILURE);
     }
