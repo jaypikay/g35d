@@ -60,7 +60,7 @@ int read_config(const char *filename)
 void read_keymap_profile(unsigned int *keymap, const char *profile)
 {
     cfg_t *keyprofile = NULL;
-    int i;
+    unsigned int i;
 
     if (profile) {
         for (i = 0; i < cfg_size(g35d_cfg, "keymap"); ++i) {
