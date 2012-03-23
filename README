@@ -1,0 +1,42 @@
+Logitech G35 Headset Support for Linux
+======================================
+
+This user-space daemon intends to provide support for the G35 buttons located
+on the headset. Button profiles offer the ability to switch the button
+functionality on-the-fly. The buttons will be passed through the uinput device
+to your system.
+
+Requirements
+------------
+
+* cmake (>= 2.6)
+* libconfuse
+* libg35 (https://github.com/jaypikay/libg35)
+
+Building
+--------
+
+To compile the project:
+
+    # cmake .
+    # make
+
+If everything went smoothly the application can be installed with (Default
+Prefix: /usr/local):
+
+    # make install
+
+Usage
+-----
+
+The key mappings are stored in profiles in the g35d.rc configuration file. It
+will be installed to /etc/g35d.rc. The keycodes for each key can be found in
+<include_dir>/linux/input.h.
+
+To start the program run:
+
+    # g35d
+
+To explicitly start the program as daemon with a different configuration file:
+
+    # g35d -d -c /tmp/other-g35d.rc
