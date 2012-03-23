@@ -59,23 +59,12 @@ static void exit_g35d(int exit_code)
     exit(exit_code);
 }
 
-void conf_test()
-{
-    int i;
-
-    if (g35d_cfg) {
-        fprintf(stderr, "daemon: %s\n",
-                cfg_getbool(g35d_cfg, "daemon") ? "yes" : "no");
-        fprintf(stderr, "pid file: %s\n", cfg_getstr(g35d_cfg, "pidfile"));
-    }
-}
-
 void signal_handler(int sig)
 {
     switch (sig) {
         case SIGHUP:
             syslog(LOG_INFO, "%s daemon reload configuration", DAEMON_NAME);
-            conf_test();
+            read_config(config_filename);
             break;
         case SIGABRT:
         case SIGTERM:

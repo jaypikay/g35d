@@ -22,15 +22,6 @@
 
 extern cfg_t *g35d_cfg;
 
-extern cfg_bool_t isdaemon;
-extern char *pid_filename;
-
-extern int keymap_G1;
-extern int keymap_G2;
-extern int keymap_G3;
-extern int keymap_VOLDN;
-extern int keymap_VOLUP;
-
-void read_config(const char *filename);
+int read_config(const char *filename);
 
 #endif /* _G35CONFIG_H_ */

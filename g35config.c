@@ -20,43 +20,37 @@
 #include <string.h>
 #include <unistd.h>
 #include <confuse.h>
+#include <linux/input.h>
 
 #include "g35config.h"
 
 cfg_t *g35d_cfg = 0;
 
-cfg_bool_t isdaemon = cfg_false;
-char *pid_filename = "/var/run/g35d.pid";
-
-int keymap_G1 = 59;
-int keymap_G2 = 60;
-int keymap_G3 = 61;
-int keymap_VOLDN = 114;
-int keymap_VOLUP = 115;
-
-static cfg_opt_t sec_opt_keymap[] = {
-    CFG_SIMPLE_INT("G1", &keymap_G1),
-    CFG_SIMPLE_INT("G2", &keymap_G2),
-    CFG_SIMPLE_INT("G3", &keymap_G3),
-    CFG_SIMPLE_INT("VOL_DOWN", &keymap_VOLDN),
-    CFG_SIMPLE_INT("VOL_UP", &keymap_VOLUP),
+cfg_opt_t sec_opt_keymap[] = {
+    CFG_INT("G1", KEY_NEXTSONG, CFGF_NONE),
+    CFG_INT("G2", KEY_PLAYPAUSE, CFGF_NONE),
+    CFG_INT("G3", KEY_PREVIOUS, CFGF_NONE),
+    CFG_INT("VOL_DOWN", KEY_VOLUMEDOWN, CFGF_NONE),
+    CFG_INT("VOL_UP", KEY_VOLUMEUP, CFGF_NONE),
     CFG_END()
 };
 
 cfg_opt_t opt_g35d[] = {
-    CFG_SIMPLE_BOOL("daemon", &isdaemon),
-    CFG_SIMPLE_STR("pidfile", &pid_filename),
-    //CFG_SEC("keymap", sec_opt_keymap, CFGF_MULTI | CFGF_TITLE),
+    CFG_BOOL("daemon", cfg_false, CFGF_NONE),
+    CFG_STR("pidfile", "/var/run/g35d.pid", CFGF_NONE),
+    CFG_SEC("keymap", sec_opt_keymap, CFGF_MULTI | CFGF_TITLE),
     CFG_END()
 };
 
 
-void read_config(const char *filename)
+int read_config(const char *filename)
 {
     int ret;
 
     cfg_free(g35d_cfg);
     
-    g35d_cfg = cfg_init(opt_g35d, 0);
-    cfg_parse(g35d_cfg, filename);
+    g35d_cfg = cfg_init(opt_g35d, CFGF_NOCASE);
+    ret = cfg_parse(g35d_cfg, filename);
+
+    return ret;
 }
