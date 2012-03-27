@@ -1,0 +1,59 @@
+.\" Process this file with
+.\" groff -man -Tascii g35d.1
+.TH Logitech G35 Headset support – Linux user-space daemon
+.SH NAME
+g35d \- G35 Linux user-space daemon
+.SH SYNOPSIS
+.B g35d [-c config-file] [-d]
+.SH DESCRIPTION
+.B g35d
+will provide a tool to handle the events triggered by pressing the G-Buttons
+and the microphone mute events by either changing the arm possition or pressing
+the mute button itself. The daemon can map each button to a key event, for
+example the multimedia keys for. The key mapping is read from a configuration
+file
+.BR g35d.rc (5).
+It is also possible to have pre-configured button map
+profiles.
+.SH OPTIONS
+.IP "-c/--config `config-file'"
+Specify an alternate
+.I config-file
+to load upon daemon start instead of
+.IR /etc/g35d.rc .
+.IP -d/--daemon
+Start
+.IR g35d
+as background daemon and detach from terminal.
+.IP "-p/--profile `profile-name'"
+The
+.I config-file
+can store multiple button mappings. By specifying a
+.I profile-name
+a profile is selected.
+.IP "-u/--uinput `device-file'"
+Manually specify the
+.I uinput
+device to use. Otherwise the default value
+.IR /dev/uinput
+is used.
+.SH FILES
+.I /etc/g35d.rc
+.RS
+System wide configuration with profiles and daemon default parameters. See
+.BR g35d.rc (5)
+for further details.
+.RE
+.SH BUGS
+As the project and its components are still in an experimental state, there are
+probably many issues to solve. If you have found a bug or a have feature
+request, please visit the github project site
+.UR https://\:github.com/\:jaypikay/\:g35d/\:issues
+to post your report.
+.UE
+.SH AUTHOR
+Julian Knauer
+.MT jpk@goatpr0n.de
+.ME
+.SH "SEE ALSO"
+.BR g35d.rc (5)

@@ -1,0 +1,107 @@
+.\" Process this file with
+.\" groff -man -Tascii g35drc.5
+.TH g35d configuration
+.SH NAME
+/etc/g35d.rc
+.SH DESCRIPTION
+System-wide configuration and profiles for the Logitech G35 headset Linux
+daemon. The configuration has two different levels:
+.TP
+.B "daemon configuration"
+.TP
+.B profiles
+.SH OPTIONS
+.TP
+.B "daemon configuration (default values)"
+.IP
+.RS
+.IP "daemon = false"
+.RS
+Run g35d as daemon. (Can be either "true" or "false")
+.RE
+.IP "pidfile = /var/run/g35d.pid"
+.RS
+Pid file to store daemon pid in.
+.RE
+.IP "uinput = /dev/uinput"
+.RS
+.I UINPUT
+device for user-space key press event injection.
+.RE
+.IP "profile = Profile1"
+.RS
+Name of the default profile to load.
+.RE
+.IP "keymap ProfileName { ... }"
+.RS
+Button mappings are defined in this section. See
+.IR profiles
+for further details.
+.RE
+.RE
+.TP
+.B profiles - keymap configuration
+.IP
+Each
+.I keymap
+profile shoud have an unique name and the buttons are mapped by using the
+numeric key. The key IDs can be found here:
+.IR /usr/include/linux/input.h .
+Bellow each possible button is listed with a suggested value, to map the
+multimedia keys to the headset buttons.
+.IP
+.RS
+.IP "G1 = 163"
+.RS
+Will map G1 to KEY_NEXTSONG.
+.RE
+.IP "G2 = 164"
+.RS
+Will map G2 to KEY_PLAYPAUSE.
+.RE
+.IP "G3 = 165"
+.RS
+Will map G3 to KEY_PREVOUSSONG.
+.RE
+.IP "VOL_DOWN = 114"
+.RS
+Will map wheel down to KEY_VOLUMEDOWN.
+.RE
+.IP "VOL_UP = 115"
+.RS
+Will map wheel up to KEY_VOLUMEUP.
+.RE
+.RE
+.SH EXAMPLES
+The following example will illustrate the configuration syntax.
+
+.RS
+.nf
+daemon = false
+pidfile = "/tmp/g35d.pid"
+uinput = "/dev/uinput"
+profile = "Profile1"
+
+keymap Profile1 {
+    G1 = 163
+    G2 = 164
+    G3 = 165
+    VOL_DOWN = 114
+    VOL_UP = 115
+}
+
+keymap Profile2 {
+    G1 = 59
+    G2 = 60
+    G3 = 61
+    VOL_DOWN = 114
+    VOL_UP = 115
+}
+.fi
+.RE
+.SH AUTHOR
+Julian Knauer
+.MT jpk@goatpr0n.de
+.ME
+.SH "SEE ALSO"
+.BR g35d (1)
