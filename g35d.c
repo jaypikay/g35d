@@ -44,13 +44,21 @@ static char *pid_file = NULL;
 static char *uinput_dev = NULL;
 static char *profile_name = NULL;
 
+static exit_lock = 0;
+
 pthread_t keypress_thread;
 
 
 static void exit_g35d(int exit_code)
 {
+    /* Lock to prevent multiple calls to exit_g35d */
+    if (!exit_lock)
+        exit_lock = 1;
+    else
+        return;
+
     if (keypress_thread)
-        pthread_join(keypress_thread, NULL);
+        pthread_kill(keypress_thread, SIGINT);
 
     g35_uinput_destroy();
     g35_destroy();
