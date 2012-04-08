@@ -44,7 +44,7 @@ static char *pid_file = NULL;
 static char *uinput_dev = NULL;
 static char *profile_name = NULL;
 
-static exit_lock = 0;
+static int exit_lock = 0;
 
 pthread_t keypress_thread;
 
